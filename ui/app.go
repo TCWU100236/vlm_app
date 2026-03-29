@@ -21,8 +21,8 @@ func BuildUI() {
 	canvasImg := canvas.NewImageFromImage(image.NewRGBA(image.Rect(0, 0, 640, 480)))
 	canvasImg.FillMode = canvas.ImageFillContain
 
-	// 啟動攝影機串流（背景 goroutine）
-	go camera.StreamCamera(canvasImg)
+	// 啟動攝影機串流
+	go camera.StreamCamera(canvasImg) // 丟到背景執行（goroutine）
 
 	// 右側元件
 	promptEntry := widget.NewMultiLineEntry()
