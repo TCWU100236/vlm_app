@@ -13,7 +13,4 @@ import (
 
 func main() {
 	ui.BuildUI()
-
-	// TODO: 測試 gocv + Ollama，並連接 UI
-
 }
