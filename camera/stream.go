@@ -3,11 +3,15 @@ package camera
 import (
 	"fmt"
 
+	"fyneTest/vlm"
+
+	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
+	"fyne.io/fyne/v2/widget"
 	"gocv.io/x/gocv"
 )
 
-func StreamCamera(canvasImg *canvas.Image) {
+func StreamCamera(canvasImg *canvas.Image, promptEntry *widget.Entry, outputLabel *widget.Label, isRunning *bool) {
 	// 開啟攝影機（0 代表第一台）
 	cam, err := gocv.OpenVideoCapture(0)
 	if err != nil {
@@ -23,11 +27,8 @@ func StreamCamera(canvasImg *canvas.Image) {
 	frame := gocv.NewMat() // 建立一個空的 Mat 來存影像
 	defer frame.Close()
 
-	// 建立顯示視窗
-	// window := gocv.NewWindow("攝影機畫面")
-	// defer window.Close()
-
 	// 無限迴圈，持續讀取、顯示畫面
+	frameCount := 0 // 在迴圈外面宣告計數器
 	for {
 		ok := cam.Read(&frame) // 讀一幀，讀取成功會回傳 true，失敗則回傳 false
 
@@ -40,8 +41,35 @@ func StreamCamera(canvasImg *canvas.Image) {
 			}
 
 			// 替換圖片並通知重繪
-			canvasImg.Image = img
-			canvasImg.Refresh()
+			fyne.Do(func() {
+				canvasImg.Image = img
+				canvasImg.Refresh()
+			})
+
+			// 每 15 幀送一次 VLM
+			frameCount++
+			if frameCount >= 15 && *isRunning {
+				frameCount = 0 // 重置計數器
+
+				// 取得使用者輸入的 prompt
+				prompt := promptEntry.Text
+
+				buf, _ := gocv.IMEncode(".jpg", frame)
+				frameBytes := buf.GetBytes()
+
+				go func() {
+					result, err := vlm.VLM_inference(frameBytes, prompt)
+					if err != nil {
+						return
+					}
+					// 更新 UI 顯示結果
+					fyne.Do(func() {
+						outputLabel.SetText(result)
+					})
+				}()
+
+				buf.Close()
+			}
 		}
 	}
 }
