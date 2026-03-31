@@ -1,6 +1,7 @@
 package camera
 
 import (
+	"context"
 	"fmt"
 
 	"fyneTest/vlm"
@@ -11,7 +12,7 @@ import (
 	"gocv.io/x/gocv"
 )
 
-func StreamCamera(canvasImg *canvas.Image, promptEntry *widget.Entry, outputLabel *widget.Label, isRunning *bool) {
+func StreamCamera(canvasImg *canvas.Image, promptEntry *widget.Entry, outputLabel *widget.Label, isRunning *bool, ctx *context.Context) {
 	// 開啟攝影機（0 代表第一台）
 	cam, err := gocv.OpenVideoCapture(0)
 	if err != nil {
@@ -58,9 +59,13 @@ func StreamCamera(canvasImg *canvas.Image, promptEntry *widget.Entry, outputLabe
 				frameBytes := buf.GetBytes()
 
 				go func() {
-					result, err := vlm.VLM_inference(frameBytes, prompt)
-					if err != nil {
-						return
+					result, err := vlm.VLM_inference(*ctx, frameBytes, prompt)
+					// if err != nil {
+					// 	return
+					// }
+
+					if err != nil || result == "" {
+						return // 有錯誤或結果是空的，直接返回不更新 UI
 					}
 					// 更新 UI 顯示結果
 					fyne.Do(func() {

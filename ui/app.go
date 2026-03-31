@@ -2,6 +2,7 @@ package ui
 
 import (
 	// "log"
+	"context"
 	"fyneTest/camera"
 	"image"
 
@@ -13,7 +14,11 @@ import (
 )
 
 func BuildUI() {
+	// 用來控制 VLM 推論的開關
 	isRunning := false
+	// 建立可取消的 context
+	ctx, cancel := context.WithCancel(context.Background())
+
 	a := app.New()
 	w := a.NewWindow("VLM Camera")
 	w.Resize(fyne.NewSize(1000, 600))
@@ -30,16 +35,42 @@ func BuildUI() {
 	outputLabel := widget.NewLabel("VLM 輸出將顯示在這裡")
 	outputLabel.Wrapping = fyne.TextWrapWord
 
-	startBtn := widget.NewButton("開始", func() {
+	// 先宣告按鈕變數，才能在 callback 裡互相控制
+	var startBtn, stopBtn, exitBtn *widget.Button
+
+	startBtn = widget.NewButton("開始 inference", func() {
+		ctx, cancel = context.WithCancel(context.Background()) // 重新建立一個新的 context
 		isRunning = true
+
+		// 更新元件狀態
+		startBtn.Disable()
+		stopBtn.Enable()
+		exitBtn.Disable()
+		promptEntry.Disable()
 	})
-	stopBtn := widget.NewButton("停止", func() {
+
+	stopBtn = widget.NewButton("暫停 inference", func() {
+		isRunning = false
+		cancel()
+
+		// 更新元件狀態
+		startBtn.Enable()
+		stopBtn.Disable()
+		exitBtn.Enable()
+		promptEntry.Enable()
+	})
+
+	exitBtn = widget.NewButton("結束應用程式", func() {
 		a.Quit()
 	})
+
+	// 程式剛啟動時的預設狀態
+	stopBtn.Disable()
 	btnRow := container.NewHBox(startBtn, stopBtn)
+	promptEntry.SetText("你看到哪些東西？")
 
 	// 啟動攝影機串流
-	go camera.StreamCamera(canvasImg, promptEntry, outputLabel, &isRunning) // 丟到背景執行（goroutine）
+	go camera.StreamCamera(canvasImg, promptEntry, outputLabel, &isRunning, &ctx) // 丟到背景執行（goroutine）
 
 	// 右側佈局：從上到下
 	rightPanel := container.NewVBox(
@@ -50,6 +81,7 @@ func BuildUI() {
 		outputLabel,
 		widget.NewSeparator(),
 		btnRow,
+		exitBtn,
 	)
 
 	// 左右合併
