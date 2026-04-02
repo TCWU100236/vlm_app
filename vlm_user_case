@@ -1,0 +1,12 @@
+『VLM application idea』
+case type: 瑕疵檢測
+situation: 當產線上的技術人員遇到困難,但旁邊沒有老鳥可以問問題
+solution:  user掃描圖片, ai透過圖片和語音（文字）分析問題, 接著在搜尋相關文件, 提出解決方法. 最後以agent方式紀錄問題發現-解決過程
+
+case type: 智慧車流分析
+situation: 當高速公路發生車禍/意外, 造成車流回堵
+solution:  VLM 透過即時影像檢測路上是否有意外,或車流回堵之情況發生. => 通知處理, 救援人員,即時更新跑馬燈文字廣播
+
+case type: shopping mall
+situation: 客人找不到特定商品
+solution:  掃描圖片搜尋此商品所在之位置, 以文字訊息和路線圖, 導航消費者至正確位置
