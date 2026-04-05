@@ -1,5 +1,0 @@
-package camera
-
-func StreamCamera() {
-
-}
