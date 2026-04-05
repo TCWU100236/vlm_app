@@ -261,15 +261,14 @@ func main() {
 		}
 	}()
 
-	// ── UI 更新 goroutine ─────────────────────
-	// Linux 重點：所有 UI 操作都包在 fyne.Do() 裡
+	// ── 更新 UI goroutine ─────────────────────
 	frameCount := 0
 	go func() {
 		ticker := time.NewTicker(33 * time.Millisecond) // ~30fps
 		defer ticker.Stop()
 
 		for range ticker.C {
-			// 1. 更新攝影機畫面
+			// 1. 更新 UI 攝影機畫面
 			select {
 			case f := <-frameChan:
 				fyne.Do(func() { // ← Linux 必要，確保在主線程執行
@@ -292,7 +291,7 @@ func main() {
 			default:
 			}
 
-			// 3. 接收 VLM 結果
+			// 3. 接收 VLM inference 結果
 			select {
 			case result := <-resultChan:
 				inferring = false
